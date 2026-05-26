@@ -298,8 +298,15 @@ class TeslaPlatform {
     // Charge Amps (mapped to HomeKit brightness %)
     const ampsMin = 5;
     const ampsMax = 32;
-    const ampsToBrightness = (amps) => Math.round(((amps - ampsMin) / (ampsMax - ampsMin)) * 100);
-    const brightnessToAmps = (brightness) => Math.round(ampsMin + ((brightness / 100) * (ampsMax - ampsMin)));
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+    const ampsToBrightness = (amps) => {
+      const safeAmps = clamp(Number(amps) || 16, ampsMin, ampsMax);
+      return clamp(Math.round(((safeAmps - ampsMin) / (ampsMax - ampsMin)) * 100), 0, 100);
+    };
+    const brightnessToAmps = (brightness) => {
+      const safeBrightness = clamp(Number(brightness) || 0, 0, 100);
+      return clamp(Math.round(ampsMin + ((safeBrightness / 100) * (ampsMax - ampsMin))), ampsMin, ampsMax);
+    };
 
     let chargeAmpsService = accessory.getServiceById(S.Lightbulb, "chargeamps") || accessory.addService(S.Lightbulb, n("Charge Current"), "chargeamps");
     chargeAmpsService.setCharacteristic(C.Name, n("Charge Current"));
