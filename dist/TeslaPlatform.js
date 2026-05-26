@@ -364,7 +364,7 @@ class TeslaPlatform {
     batteryThermo.updateCharacteristic(C.TargetTemperature, 0);
 
     // Battery Service (native - shows in accessory details)
-    let batteryService = accessory.getService(S.Battery) || accessory.addService(S.Battery, , "battery");
+    let batteryService = accessory.getService(S.Battery) || accessory.addService(S.Battery, n("Battery") , "battery");
 
     // Info
     let infoService = accessory.getService(S.AccessoryInformation) || accessory.addService(S.AccessoryInformation);
