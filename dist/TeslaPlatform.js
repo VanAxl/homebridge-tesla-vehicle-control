@@ -88,6 +88,8 @@ class TeslaPlatform {
 
     // Lock
     let lockService = accessory.getService(S.LockMechanism) || accessory.addService(S.LockMechanism, n("Lock"), "lock");
+    lockService.setCharacteristic(C.Name, n("Lock"));
+    lockService.setCharacteristic(C.ConfiguredName, n("Lock"));
     lockService.getCharacteristic(C.LockTargetState).onSet(async (value) => {
       try {
         await this._ensureAwake();
@@ -98,6 +100,8 @@ class TeslaPlatform {
 
     // Climate (Thermostat)
     let thermoService = accessory.getService(S.Thermostat) || accessory.addService(S.Thermostat, n("Climate"), "climate");
+    thermoService.setCharacteristic(C.Name, n("Climate"));
+    thermoService.setCharacteristic(C.ConfiguredName, n("Climate"));
     thermoService.getCharacteristic(C.CurrentTemperature).onGet(() => {
       if (this.vehicleData && this.vehicleData.climate_state) {
         return this.vehicleData.climate_state.inside_temp || 20;
@@ -161,6 +165,8 @@ class TeslaPlatform {
 
     // Trunk (momentary)
     let trunkService = accessory.getServiceById(S.Switch, "trunk") || accessory.addService(S.Switch, n("Trunk"), "trunk");
+    trunkService.setCharacteristic(C.Name, n("Trunk"));
+    trunkService.setCharacteristic(C.ConfiguredName, n("Trunk"));
     trunkService.getCharacteristic(C.On).onSet(async (value) => {
       try {
         if (value) { await this._ensureAwake(); await this.tesla.openTrunk(this.vehicleId); this.log("Trunk opened"); }
@@ -170,6 +176,8 @@ class TeslaPlatform {
 
     // Frunk (momentary)
     let frunkService = accessory.getServiceById(S.Switch, "frunk") || accessory.addService(S.Switch, n("Frunk"), "frunk");
+    frunkService.setCharacteristic(C.Name, n("Frunk"));
+    frunkService.setCharacteristic(C.ConfiguredName, n("Frunk"));
     frunkService.getCharacteristic(C.On).onSet(async (value) => {
       try {
         if (value) { await this._ensureAwake(); await this.tesla.openFrunk(this.vehicleId); this.log("Frunk opened"); }
@@ -179,6 +187,8 @@ class TeslaPlatform {
 
     // Charge Port
     let chargePortService = accessory.getServiceById(S.Switch, "chargeport") || accessory.addService(S.Switch, n("Charge Port"), "chargeport");
+    chargePortService.setCharacteristic(C.Name, n("Charge Port"));
+    chargePortService.setCharacteristic(C.ConfiguredName, n("Charge Port"));
     chargePortService.getCharacteristic(C.On).onSet(async (value) => {
       try {
         await this._ensureAwake();
@@ -189,6 +199,8 @@ class TeslaPlatform {
 
     // Charging
     let chargingService = accessory.getServiceById(S.Switch, "charging") || accessory.addService(S.Switch, n("Charging"), "charging");
+    chargingService.setCharacteristic(C.Name, n("Charging"));
+    chargingService.setCharacteristic(C.ConfiguredName, n("Charging"));
     chargingService.getCharacteristic(C.On).onSet(async (value) => {
       try {
         await this._ensureAwake();
@@ -199,6 +211,8 @@ class TeslaPlatform {
 
     // Flash Lights (momentary)
     let flashService = accessory.getServiceById(S.Switch, "flash") || accessory.addService(S.Switch, n("Flash Lights"), "flash");
+    flashService.setCharacteristic(C.Name, n("Flash Lights"));
+    flashService.setCharacteristic(C.ConfiguredName, n("Flash Lights"));
     flashService.getCharacteristic(C.On).onSet(async (value) => {
       try {
         if (value) { await this._ensureAwake(); await this.tesla.flashLights(this.vehicleId); this.log("Lights flashed"); }
@@ -208,6 +222,8 @@ class TeslaPlatform {
 
     // Horn (momentary)
     let hornService = accessory.getServiceById(S.Switch, "horn") || accessory.addService(S.Switch, n("Horn"), "horn");
+    hornService.setCharacteristic(C.Name, n("Horn"));
+    hornService.setCharacteristic(C.ConfiguredName, n("Horn"));
     hornService.getCharacteristic(C.On).onSet(async (value) => {
       try {
         if (value) { await this._ensureAwake(); await this.tesla.honkHorn(this.vehicleId); this.log("Horn honked"); }
@@ -224,6 +240,8 @@ class TeslaPlatform {
 
     // Vent Windows (toggle)
     let ventService = accessory.getServiceById(S.Switch, "vent") || accessory.addService(S.Switch, n("Windows"), "vent");
+    ventService.setCharacteristic(C.Name, n("Windows"));
+    ventService.setCharacteristic(C.ConfiguredName, n("Windows"));
     ventService.getCharacteristic(C.On).onSet(async (value) => {
       try {
         await this._ensureAwake();
@@ -234,6 +252,8 @@ class TeslaPlatform {
 
     // Defrost (toggle)
     let defrostService = accessory.getServiceById(S.Switch, "defrost") || accessory.addService(S.Switch, n("Defrost"), "defrost");
+    defrostService.setCharacteristic(C.Name, n("Defrost"));
+    defrostService.setCharacteristic(C.ConfiguredName, n("Defrost"));
     defrostService.getCharacteristic(C.On).onSet(async (value) => {
       try {
         await this._ensureAwake();
@@ -244,6 +264,8 @@ class TeslaPlatform {
 
     // Steering Wheel Heater (toggle)
     let steeringService = accessory.getServiceById(S.Switch, "steeringheater") || accessory.addService(S.Switch,  n("Steering Wheel Heater"), "steeringheater");
+    steeringService.setCharacteristic(C.Name, n("Steering Wheel Heater"));
+    steeringService.setCharacteristic(C.ConfiguredName, n("Steering Wheel Heater"));
     steeringService.getCharacteristic(C.On).onSet(async (value) => {
       try {
         await this._ensureAwake();
@@ -254,6 +276,8 @@ class TeslaPlatform {
 
     // Charge Limit (Lightbulb brightness = 50-100%)
     let chargeLimitService = accessory.getServiceById(S.Lightbulb, "chargelimit") || accessory.addService(S.Lightbulb, n("Charge Limit"), "chargelimit");
+    chargeLimitService.setCharacteristic(C.Name, n("Charge Limit"));
+    chargeLimitService.setCharacteristic(C.ConfiguredName, n("Charge Limit"));
     chargeLimitService.getCharacteristic(C.On).onGet(() => true);
     chargeLimitService.getCharacteristic(C.On).onSet(async () => {});
     chargeLimitService.getCharacteristic(C.Brightness).onGet(() => {
@@ -275,7 +299,8 @@ class TeslaPlatform {
 
     // Charge Amps (Lightbulb brightness = 5-32A)
     let chargeAmpsService = accessory.getServiceById(S.Lightbulb, "chargeamps") || accessory.addService(S.Lightbulb, n("Charge Current"), "chargeamps");
-    chargeAmpsService.setCharacteristic(C.Name, "Charge Amps");
+    chargeAmpsService.setCharacteristic(C.Name, n("Charge Current"));
+    chargeAmpsService.setCharacteristic(C.ConfiguredName, n("Charge Current"));
     chargeAmpsService.getCharacteristic(C.On).onGet(() => true);
     chargeAmpsService.getCharacteristic(C.On).onSet(async () => {});
     chargeAmpsService.getCharacteristic(C.Brightness).onGet(() => {
@@ -299,6 +324,8 @@ class TeslaPlatform {
 
     // Max Range Charge (momentary button)
     let maxRangeService = accessory.getServiceById(S.Switch, "maxrange") || accessory.addService(S.Switch,  n("Max Range Charge"), "maxrange");
+    maxRangeService.setCharacteristic(C.Name, n("Max Range Charge"));
+    maxRangeService.setCharacteristic(C.ConfiguredName, n("Max Range Charge"));
     maxRangeService.getCharacteristic(C.On).onGet(() => false);
     maxRangeService.getCharacteristic(C.On).onSet(async (value) => {
       if (!value) return;
@@ -312,6 +339,8 @@ class TeslaPlatform {
 
     // Boombox (momentary button)
     let boomboxService = accessory.getServiceById(S.Switch, "boombox") || accessory.addService(S.Switch, n("Boombox"), "boombox");
+    boomboxService.setCharacteristic(C.Name, n("Boombox"));
+    boomboxService.setCharacteristic(C.ConfiguredName, n("Boombox"));
     boomboxService.getCharacteristic(C.On).onGet(() => false);
     boomboxService.getCharacteristic(C.On).onSet(async (value) => {
       if (!value) return;
