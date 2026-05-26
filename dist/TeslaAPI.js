@@ -335,6 +335,7 @@ class TeslaApi {
   async chargeStart(id) { return this.sendCommand(id, "charge_start"); }
   async chargeStop(id) { return this.sendCommand(id, "charge_stop"); }
   async setChargeLimit(id, pct) { return this.sendCommand(id, "set_charge_limit", { percent: pct }); }
+  async setChargeAmps(id, amps) { return this.sendCommand(id, "set_charging_amps", { charging_amps: amps }); }
   async flashLights(id) { return this.sendCommand(id, "flash_lights"); }
   async honkHorn(id) { return this.sendCommand(id, "honk_horn"); }
   async ventWindows(id) { return this.sendCommand(id, "window_control", { command: "vent", lat: 0, lon: 0 }); }
