@@ -89,7 +89,6 @@ class TeslaPlatform {
     // Lock
     let lockService = accessory.getService(S.LockMechanism) || accessory.addService(S.LockMechanism, n("Lock"), "lock");
     lockService.setCharacteristic(C.Name, n("Lock"));
-    lockService.setCharacteristic(C.ConfiguredName, n("Lock"));
     lockService.getCharacteristic(C.LockTargetState).onSet(async (value) => {
       try {
         await this._ensureAwake();
@@ -101,7 +100,6 @@ class TeslaPlatform {
     // Climate (Thermostat)
     let thermoService = accessory.getService(S.Thermostat) || accessory.addService(S.Thermostat, n("Climate"), "climate");
     thermoService.setCharacteristic(C.Name, n("Climate"));
-    thermoService.setCharacteristic(C.ConfiguredName, n("Climate"));
     thermoService.getCharacteristic(C.CurrentTemperature).onGet(() => {
       if (this.vehicleData && this.vehicleData.climate_state) {
         return this.vehicleData.climate_state.inside_temp || 20;
