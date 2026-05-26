@@ -143,6 +143,8 @@ class TeslaPlatform {
 
     // Sentry Mode
     let sentryService = accessory.getServiceById(S.Switch, "sentry") || accessory.addService(S.Switch, n("Sentry"), "sentry");
+    sentryService.setCharacteristic(C.Name, n("Sentry"));
+    sentryService.setCharacteristic(C.ConfiguredName, n("Sentry"));
     sentryService.getCharacteristic(C.On).onSet(async (value) => {
       try {
         await this._ensureAwake();
