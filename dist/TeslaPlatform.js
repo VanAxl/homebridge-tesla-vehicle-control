@@ -517,6 +517,7 @@ class TeslaPlatform {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
   updateAccessories() {
+    this.log("updateAccessories called");
     if (!this.vehicleData) return;
     const C = this.Characteristic;
     const S = this.Service;
