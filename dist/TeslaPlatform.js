@@ -19,6 +19,7 @@ class TeslaPlatform {
     this.homeLatitude = parseFloat(config.home_lat || 0);
     this.homeLongitude = parseFloat(config.home_long || 0);
     this.homeRadiusMeters = parseInt(config.home_radius || 200);
+    this.batteryTile = String(config.battery_tile || "false").toLowerCase() === "true";
 
     this.tesla = new TeslaAPI_1.TeslaApi({
       accessToken: config.accessToken || "",
@@ -288,7 +289,7 @@ class TeslaPlatform {
     chargeLimitService.getCharacteristic(C.Brightness).setProps({ minValue: 50, maxValue: 100, minStep: 5 });
     chargeLimitService.updateCharacteristic(C.Brightness, 80);
 
-        // Charge Amps
+    // Charge Amps
     let chargeAmpsService = accessory.getServiceById(S.Lightbulb, "chargeamps") || accessory.addService(S.Lightbulb, n("Charge Current"), "chargeamps");
     chargeAmpsService.setCharacteristic(C.Name, n("Charge Current"));
 
@@ -328,9 +329,6 @@ class TeslaPlatform {
       this._ampsToBrightness(16)
     );
 
-
-
-
     // Max Range Charge (momentary button)
     let maxRangeService = accessory.getServiceById(S.Switch, "maxrange") || accessory.addService(S.Switch,  n("Max Range Charge"), "maxrange");
     maxRangeService.setCharacteristic(C.Name, n("Max Range Charge"));
@@ -359,50 +357,29 @@ class TeslaPlatform {
       } catch (e) { this.log("Boombox error: " + e.message); }
     });
 
-    // Battery Level - using Thermostat (read-only) to show % as big tile
-    // Remove old services from previous versions
-    const oldBattTemp = accessory.getServiceById(S.TemperatureSensor, "batterypct");
-    if (oldBattTemp) accessory.removeService(oldBattTemp);
+  // Battery Level tile as HumiditySensor
+  const oldBattTemp = accessory.getServiceById(S.TemperatureSensor, "batterypct");
+  if (oldBattTemp) accessory.removeService(oldBattTemp);
+  const oldBattThermo = accessory.getServiceById(S.Thermostat, "batterypct");
+  if (oldBattThermo) accessory.removeService(oldBattThermo);
+  if (this.batteryTile) {
+    let batteryHumidity =
+      accessory.getServiceById(S.HumiditySensor, "batterypct") ||
+      accessory.addService(S.HumiditySensor, n("Battery Level"), "batterypct");
+    batteryHumidity.setCharacteristic(C.Name, n("Battery Level"));
+    batteryHumidity.getCharacteristic(C.CurrentRelativeHumidity).setProps({
+      minValue: 0,
+      maxValue: 100,
+      minStep: 1
+    });
+    batteryHumidity.updateCharacteristic(C.CurrentRelativeHumidity, 0);
+  } else {
     const oldBattHumidity = accessory.getServiceById(S.HumiditySensor, "batterypct");
     if (oldBattHumidity) accessory.removeService(oldBattHumidity);
-    let batteryThermo = accessory.getServiceById(S.Thermostat, "batterypct") || accessory.addService(S.Thermostat, n("Battery Level"), "batterypct");
-    batteryThermo.getCharacteristic(C.CurrentTemperature).setProps({ minValue: 0, maxValue: 100, minStep: 1 });
-    batteryThermo.getCharacteristic(C.TargetTemperature).setProps({ minValue: 0, maxValue: 100, minStep: 1 });
-    batteryThermo.getCharacteristic(C.CurrentTemperature).onGet(() => {
-      if (this.vehicleData && this.vehicleData.charge_state) {
-        return this.vehicleData.charge_state.battery_level || 0;
-      }
-      return 0;
-    });
-    batteryThermo.getCharacteristic(C.TargetTemperature).onGet(() => {
-      if (this.vehicleData && this.vehicleData.charge_state) {
-        return this.vehicleData.charge_state.battery_level || 0;
-      }
-      return 0;
-    });
-    batteryThermo.getCharacteristic(C.TargetTemperature).onSet(async (value) => {
-      this.log("Battery tile is read-only, ignoring set to " + value);
-    });
-    batteryThermo.getCharacteristic(C.CurrentHeatingCoolingState).onGet(() => {
-      if (this.vehicleData && this.vehicleData.charge_state && this.vehicleData.charge_state.charging_state === "Charging") {
-        return C.CurrentHeatingCoolingState.HEAT;
-      }
-      return C.CurrentHeatingCoolingState.OFF;
-    });
-    batteryThermo.getCharacteristic(C.TargetHeatingCoolingState).setProps({
-      validValues: [C.TargetHeatingCoolingState.OFF]
-    });
-    batteryThermo.getCharacteristic(C.TargetHeatingCoolingState).onGet(() => {
-      return C.TargetHeatingCoolingState.OFF;
-    });
-    batteryThermo.getCharacteristic(C.TargetHeatingCoolingState).onSet(async (value) => {
-      this.log("Battery tile is read-only");
-    });
-    batteryThermo.updateCharacteristic(C.CurrentTemperature, 0);
-    batteryThermo.updateCharacteristic(C.TargetTemperature, 0);
+  }
 
-    // Battery Service (native - shows in accessory details)
-    let batteryService = accessory.getService(S.Battery) || accessory.addService(S.Battery, n("Battery") , "battery");
+  // Battery Service native
+  let batteryService = accessory.getService(S.Battery) || accessory.addService(S.Battery, n("Battery"), "battery");
 
     // Info
     let infoService = accessory.getService(S.AccessoryInformation) || accessory.addService(S.AccessoryInformation);
@@ -532,14 +509,11 @@ class TeslaPlatform {
         chargingService.updateCharacteristic(C.On, this.vehicleData.charge_state.charging_state === "Charging");
       }
 
-      // Battery % (Thermostat tile)
-      const batteryThermo = acc.getServiceById(S.Thermostat, "batterypct");
-      if (batteryThermo && this.vehicleData.charge_state) {
+      // Battery % tile
+      const batteryHumidity = acc.getServiceById(S.HumiditySensor, "batterypct");
+      if (batteryHumidity && this.vehicleData.charge_state) {
         const level = this.vehicleData.charge_state.battery_level || 0;
-        batteryThermo.updateCharacteristic(C.CurrentTemperature, level);
-        batteryThermo.updateCharacteristic(C.TargetTemperature, level);
-        const isCharging = this.vehicleData.charge_state.charging_state === "Charging";
-        batteryThermo.updateCharacteristic(C.CurrentHeatingCoolingState, isCharging ? C.CurrentHeatingCoolingState.HEAT : C.CurrentHeatingCoolingState.OFF);
+        batteryHumidity.updateCharacteristic(C.CurrentRelativeHumidity, level);
       }
 
       // Battery (native service)
