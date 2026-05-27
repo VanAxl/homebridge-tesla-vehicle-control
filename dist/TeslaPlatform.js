@@ -437,6 +437,7 @@ class TeslaPlatform {
           if (this.vehicleData) this.vehicleData.state = "offline";
         } else if (r && r.response) {
           this.vehicleData = r.response;
+          this.log("FULL RESPONSE=" + JSON.stringify(r.response));
           this._lastPollTime = Date.now();
           this.log("Got vehicle data - battery: " + (r.response.charge_state ? r.response.charge_state.battery_level + "%" : "n/a") + ", locked: " + (r.response.vehicle_state ? r.response.vehicle_state.locked : "n/a"));
           this.updateAccessories();
