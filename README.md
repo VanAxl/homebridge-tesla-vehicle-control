@@ -251,4 +251,4 @@ Tokens are refreshed proactively **5 minutes before expiry** to avoid interrupti
 
 ## License
 
-MIT © [trama2000](https://github.com/trama2000)
+MIT ©
