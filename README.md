@@ -13,22 +13,47 @@ Control your Tesla directly from the Home app, Siri, or any HomeKit-compatible a
 
 | HomeKit Accessory | Service Type | What it does |
 |---|---|---|
-| 🔒 **Cerradura** | LockMechanism | Lock / Unlock doors |
-| 🌡️ **Clima** | Thermostat | Climate ON/OFF + set temperature (15–28 °C, 0.5° steps) |
+| 🔒 **Lock** | LockMechanism | Lock / Unlock doors |
+| 🌡️ **Climate** | Thermostat | Climate ON/OFF + set temperature (15–28 °C, 0.5° steps) |
 | 🚗 **Trunk** | Switch | Open/Close trunk |
 | 📦 **Frunk** | Switch | Open front trunk |
 | 🔌 **Charge Port** | Switch | Open/Close charge port |
 | ⚡ **Charging** | Switch | Start/Stop charging |
 | 💡 **Flash Light** | Switch | Flash headlights (momentary) |
 | 📯 **Horn** | Switch | Honk horn (momentary) |
-| 🪟 **Ventanas** | Switch | Vent / Close all windows |
+| 🪟 **Windows** | Switch | Vent / Close all windows |
 | ❄️ **Defrost** | Switch | Max defrost ON/OFF |
-| 🎡 **Volante Calef.** | Switch | Steering wheel heater ON/OFF |
-| 🔋 **Límite Carga** | Lightbulb | Charge limit 50–100% (brightness slider) |
-| 🔋 **Batería** | TemperatureSensor | Battery level (shown as °C = %) |
+| 🔥 **Steering Wheel Heater** | Switch | Steering wheel heater ON/OFF |
+| 🔋 **Charge Limit** | Lightbulb | Charge limit 50–100% (brightness slider) |
+| 🔋 **Battery Level Tile** | HumiditySensor | Optional battery percentage tile (0–100%) |
 | 🔋 **Battery** | BatteryService | Battery level + low battery alert (<20%) |
-| ⚡ **Carga Maxima** | Switch | Set charge to maximum range (momentary) |
+| ⚡ **Max Range Charge** | Switch | Set charge to maximum range (momentary) |
+| ⚡ **Charge Current** | Lightbulb | Charging current 5–32A (brightness slider mapped to amps) |
 | 🔊 **Boombox** | Switch | Play external speaker sound (momentary) |
+
+## Battery Tile
+
+The plugin can optionally expose the vehicle battery level as a dedicated HomeKit tile.
+Example:
+```json
+"battery_tile": "true"
+```
+When enabled:
+- A HomeKit HumiditySensor tile displays battery percentage
+- Native HomeKit Battery service remains available
+When disabled:
+- Only the native HomeKit Battery service is exposed
+
+## Charge Current Control
+
+The plugin exposes a HomeKit Lightbulb accessory called:
+Charge Current
+Brightness is mapped to charging current:
+| Brightness | Charging Current |
+|---|---|
+| 0% | 5A |
+| 100% | 32A |
+This allows direct charging current adjustment from Apple Home.
 
 ### Additional Capabilities
 
@@ -84,6 +109,7 @@ Add the `TeslaControl` platform to your Homebridge `config.json`:
       "vin": "",
       "pollInterval": 300,
       "proxyUrl": "",
+      "battery_tile": "true"
     }
   ]
 }
@@ -103,6 +129,7 @@ Add the `TeslaControl` platform to your Homebridge `config.json`:
 | `vin` | string | ❌ | — | Specific vehicle VIN (if you have multiple Tesla vehicles) |
 | `pollInterval` | integer | ❌ | `300` | Status polling interval in seconds (min: 60) |
 | `proxyUrl` | string | ❌ | — | URL of tesla-http-proxy (e.g. `https://localhost:4443`) |
+| `battery_tile` | string | ❌ | `"false"` | Enable HomeKit battery percentage tile |
 
 ---
 
