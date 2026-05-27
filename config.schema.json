@@ -81,7 +81,22 @@
         "type": "string",
         "default": "https://localhost:4443",
         "description": "URL of the Tesla Vehicle Command HTTP Proxy (required for commands). Leave empty to send commands directly (will fail with 403)."
-      }
+      },
+{
+  "key": "home_lat",
+  "type": "string",
+  "placeholder": "43.6047"
+},
+{
+  "key": "home_long",
+  "type": "string",
+  "placeholder": "1.4442"
+},
+{
+  "key": "home_radius",
+  "type": "string",
+  "placeholder": "200"
+}
     }
   }
 }
