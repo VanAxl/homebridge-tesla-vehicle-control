@@ -536,6 +536,7 @@ class TeslaPlatform {
     if (presenceService) {
 
       const ds = this.vehicleData.drive_state;
+      this.log("FULL drive_state=" + JSON.stringify(ds));
 
       this.log(
 
