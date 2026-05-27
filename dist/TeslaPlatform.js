@@ -532,35 +532,71 @@ class TeslaPlatform {
    //Presence
    const presenceService = acc.getServiceById(S.OccupancySensor, "presence");
 
-   if (
-     presenceService &&
-     this.vehicleData.drive_state &&
-     this.homeLatitude &&
-     this.homeLongitude
-   ) {
-     const lat = this.vehicleData.drive_state.latitude;
-     const lon = this.vehicleData.drive_state.longitude;
+    if (presenceService) {
 
-     if (lat && lon) {
-       const distance = this._distanceMeters(
-         lat,
-         lon,
-         this.homeLatitude,
-         this.homeLongitude
-       );
+      const ds = this.vehicleData.drive_state;
 
-       const isHome = distance <= this.homeRadiusMeters;
+      this.log(
 
-       presenceService.updateCharacteristic(
-         C.OccupancyDetected,
-         isHome
-           ? C.OccupancyDetected.OCCUPANCY_DETECTED
-           : C.OccupancyDetected.OCCUPANCY_NOT_DETECTED
-       );
+        "Presence debug - home_lat=" + this.homeLatitude +
 
-       this.log("Vehicle distance from home: " + Math.round(distance) + "m");
-     }
-   }
+        ", home_long=" + this.homeLongitude +
+
+        ", radius=" + this.homeRadiusMeters +
+
+        ", drive_state=" + JSON.stringify(ds || {})
+
+      );
+
+      if (ds && this.homeLatitude && this.homeLongitude) {
+
+        const lat = ds.latitude;
+
+        const lon = ds.longitude;
+
+        this.log("Presence debug - vehicle lat=" + lat + ", lon=" + lon);
+
+        if (lat && lon) {
+
+          const distance = this._distanceMeters(
+
+            lat,
+
+            lon,
+
+            this.homeLatitude,
+
+            this.homeLongitude
+
+          );
+
+          const isHome = distance <= this.homeRadiusMeters;
+
+          this.log(
+
+            "Presence debug - distance=" + Math.round(distance) +
+
+            "m, isHome=" + isHome
+
+          );
+
+          presenceService.updateCharacteristic(
+
+            C.OccupancyDetected,
+
+            isHome
+
+              ? C.OccupancyDetected.OCCUPANCY_DETECTED
+
+              : C.OccupancyDetected.OCCUPANCY_NOT_DETECTED
+
+          );
+
+        }
+
+      }
+
+    }
 
 
       // Climate
