@@ -535,7 +535,13 @@ class TeslaPlatform {
 
     if (presenceService) {
 
-      const ds = this.vehicleData.drive_state;
+      const ds =
+        this.vehicleData.drive_state ||
+        this.vehicleData.response?.drive_state ||
+        this.vehicleData.vehicle_data?.drive_state;
+
+      this.log("FULL vehicleData keys=" + Object.keys(this.vehicleData).join(","));
+      this.log("FULL drive_state=" + JSON.stringify(ds));
       this.log("FULL drive_state=" + JSON.stringify(ds));
 
       this.log(
