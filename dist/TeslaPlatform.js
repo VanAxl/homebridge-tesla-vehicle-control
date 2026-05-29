@@ -292,19 +292,27 @@ class TeslaPlatform {
 
     // Charge Current
     const oldChargeAmpsThermo = accessory.getServiceById(S.Thermostat, "chargeamps_thermo");
+    const oldChargeAmpsHeaterCooler = accessory.getServiceById(S.HeaterCooler, "chargeamps_heatercooler");
     const oldChargeAmpsLight = accessory.getServiceById(S.Lightbulb, "chargeamps");
+
     if (this.chargeCurrentControl === "lightbulb") {
       if (oldChargeAmpsThermo) accessory.removeService(oldChargeAmpsThermo);
+      if (oldChargeAmpsHeaterCooler) accessory.removeService(oldChargeAmpsHeaterCooler);
+
       let chargeAmpsService =
         oldChargeAmpsLight ||
         accessory.addService(S.Lightbulb, n("Charge Current"), "chargeamps");
+
       chargeAmpsService.setCharacteristic(C.Name, n("Charge Current"));
+
       chargeAmpsService.getCharacteristic(C.On).onGet(() => true);
       chargeAmpsService.getCharacteristic(C.On).onSet(async () => {});
+
       chargeAmpsService.getCharacteristic(C.Brightness).onGet(() => {
         const amps = this.vehicleData?.charge_state?.charge_current_request || 16;
         return this._ampsToBrightness(amps);
       });
+
       chargeAmpsService.getCharacteristic(C.Brightness).onSet(async (value) => {
         try {
           await this._ensureAwake();
@@ -316,61 +324,86 @@ class TeslaPlatform {
           this.log("Charge amps error: " + e.message);
         }
       });
+
       chargeAmpsService.getCharacteristic(C.Brightness).setProps({
         minValue: 0,
         maxValue: 100,
         minStep: 1
       });
+
       chargeAmpsService.updateCharacteristic(C.Brightness, this._ampsToBrightness(16));
     } else {
       if (oldChargeAmpsLight) accessory.removeService(oldChargeAmpsLight);
-      let chargeAmpsThermo =
-        oldChargeAmpsThermo ||
-        accessory.addService(S.Thermostat, n("Charge Current"), "chargeamps_thermo");
-      chargeAmpsThermo.setCharacteristic(C.Name, n("Charge Current"));
-      chargeAmpsThermo.getCharacteristic(C.CurrentTemperature).setProps({
+      if (oldChargeAmpsThermo) accessory.removeService(oldChargeAmpsThermo);
+
+      let chargeAmpsHeaterCooler =
+        oldChargeAmpsHeaterCooler ||
+        accessory.addService(S.HeaterCooler, n("Charge Current"), "chargeamps_heatercooler");
+
+      chargeAmpsHeaterCooler.setCharacteristic(C.Name, n("Charge Current"));
+
+      chargeAmpsHeaterCooler.getCharacteristic(C.Active).onGet(() => {
+        return C.Active.ACTIVE;
+      });
+
+      chargeAmpsHeaterCooler.getCharacteristic(C.Active).onSet(async () => {});
+
+      chargeAmpsHeaterCooler.getCharacteristic(C.CurrentHeaterCoolerState).onGet(() => {
+        return C.CurrentHeaterCoolerState.HEATING;
+      });
+
+      chargeAmpsHeaterCooler.getCharacteristic(C.TargetHeaterCoolerState).setProps({
+        validValues: [C.TargetHeaterCoolerState.HEAT]
+      });
+
+      chargeAmpsHeaterCooler.getCharacteristic(C.TargetHeaterCoolerState).onGet(() => {
+        return C.TargetHeaterCoolerState.HEAT;
+      });
+
+      chargeAmpsHeaterCooler.getCharacteristic(C.TargetHeaterCoolerState).onSet(async () => {});
+
+      chargeAmpsHeaterCooler.getCharacteristic(C.CurrentTemperature).setProps({
         minValue: 5,
         maxValue: 32,
         minStep: 1
       });
-      chargeAmpsThermo.getCharacteristic(C.TargetTemperature).setProps({
+
+      chargeAmpsHeaterCooler.getCharacteristic(C.CurrentTemperature).onGet(() => {
+        return this.vehicleData?.charge_state?.charge_current_request || 16;
+      });
+
+      chargeAmpsHeaterCooler.getCharacteristic(C.HeatingThresholdTemperature).setProps({
         minValue: 5,
         maxValue: 32,
         minStep: 1
       });
-      chargeAmpsThermo.getCharacteristic(C.CurrentTemperature).onGet(() => {
+
+      chargeAmpsHeaterCooler.getCharacteristic(C.HeatingThresholdTemperature).onGet(() => {
         return this.vehicleData?.charge_state?.charge_current_request || 16;
       });
-      chargeAmpsThermo.getCharacteristic(C.TargetTemperature).onGet(() => {
-        return this.vehicleData?.charge_state?.charge_current_request || 16;
-      });
-      chargeAmpsThermo.getCharacteristic(C.TargetTemperature).onSet(async (value) => {
+
+      chargeAmpsHeaterCooler.getCharacteristic(C.HeatingThresholdTemperature).onSet(async (value) => {
         try {
           await this._ensureAwake();
           const amps = Math.max(5, Math.min(32, Math.round(value)));
           await this.tesla.setChargeAmps(this.vehicleId, amps);
-          chargeAmpsThermo.updateCharacteristic(C.CurrentTemperature, amps);
-          chargeAmpsThermo.updateCharacteristic(C.TargetTemperature, amps);
+          chargeAmpsHeaterCooler.updateCharacteristic(C.CurrentTemperature, amps);
+          chargeAmpsHeaterCooler.updateCharacteristic(C.HeatingThresholdTemperature, amps);
           this.log("Charge amps set to " + amps + "A");
         } catch (e) {
           this.log("Charge amps error: " + e.message);
         }
       });
-      chargeAmpsThermo.getCharacteristic(C.CurrentHeatingCoolingState).onGet(() => {
-        return C.CurrentHeatingCoolingState.OFF;
-      });
-      chargeAmpsThermo.getCharacteristic(C.TargetHeatingCoolingState).setProps({
-        validValues: [C.TargetHeatingCoolingState.OFF]
-      });
-      chargeAmpsThermo.getCharacteristic(C.TargetHeatingCoolingState).onGet(() => {
-        return C.TargetHeatingCoolingState.OFF;
-      });
-      chargeAmpsThermo.getCharacteristic(C.TargetHeatingCoolingState).onSet(async () => {});
-      chargeAmpsThermo.getCharacteristic(C.TemperatureDisplayUnits).onGet(() => {
+
+      chargeAmpsHeaterCooler.getCharacteristic(C.TemperatureDisplayUnits).onGet(() => {
         return C.TemperatureDisplayUnits.CELSIUS;
       });
-      chargeAmpsThermo.updateCharacteristic(C.CurrentTemperature, 16);
-      chargeAmpsThermo.updateCharacteristic(C.TargetTemperature, 16);
+
+      chargeAmpsHeaterCooler.updateCharacteristic(C.Active, C.Active.ACTIVE);
+      chargeAmpsHeaterCooler.updateCharacteristic(C.CurrentHeaterCoolerState, C.CurrentHeaterCoolerState.HEATING);
+      chargeAmpsHeaterCooler.updateCharacteristic(C.TargetHeaterCoolerState, C.TargetHeaterCoolerState.HEAT);
+      chargeAmpsHeaterCooler.updateCharacteristic(C.CurrentTemperature, 16);
+      chargeAmpsHeaterCooler.updateCharacteristic(C.HeatingThresholdTemperature, 16);
     }
 
     // Max Range Charge (momentary button)
@@ -587,13 +620,15 @@ class TeslaPlatform {
             this._ampsToBrightness(amps)
           );
         }
-        const chargeAmpsThermo = acc.getServiceById(S.Thermostat, "chargeamps_thermo");
-        if (chargeAmpsThermo) {
-          chargeAmpsThermo.updateCharacteristic(C.CurrentTemperature, amps);
-          chargeAmpsThermo.updateCharacteristic(C.TargetTemperature, amps);
+        const chargeAmpsHeaterCooler = acc.getServiceById(S.HeaterCooler, "chargeamps_heatercooler");
+        if (chargeAmpsHeaterCooler) {
+          chargeAmpsHeaterCooler.updateCharacteristic(C.Active, C.Active.ACTIVE);
+          chargeAmpsHeaterCooler.updateCharacteristic(C.CurrentHeaterCoolerState, C.CurrentHeaterCoolerState.HEATING);
+          chargeAmpsHeaterCooler.updateCharacteristic(C.TargetHeaterCoolerState, C.TargetHeaterCoolerState.HEAT);
+          chargeAmpsHeaterCooler.updateCharacteristic(C.CurrentTemperature, amps);
+          chargeAmpsHeaterCooler.updateCharacteristic(C.HeatingThresholdTemperature, amps);
         }
       }
-
       // Defrost
       const defrostService = acc.getServiceById(S.Switch, "defrost");
       if (defrostService && this.vehicleData.climate_state) {
