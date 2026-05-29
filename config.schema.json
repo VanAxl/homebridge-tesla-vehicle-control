@@ -82,15 +82,21 @@
         "default": "https://localhost:4443",
         "description": "URL of the Tesla Vehicle Command HTTP Proxy (required for commands). Leave empty to send commands directly (will fail with 403)."
       },
-      {
-        "key": "battery_tile",
+      "battery_tile": {
+        "title": "Battery Tile",
         "type": "string",
-        "placeholder": "true"
+        "default": "false",
+        "description": "Enable optional HomeKit battery percentage tile: true or false"
       },
-      {
-        "key": "charge_current_control",
+      "charge_current_control": {
+        "title": "Charge Current Control",
         "type": "string",
-        "placeholder": "thermostat"
+        "default": "thermostat",
+        "enum": [
+          "thermostat",
+          "lightbulb"
+        ],
+        "description": "Charge current control type: thermostat or lightbulb"
       }
     }
   }
