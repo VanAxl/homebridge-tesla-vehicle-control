@@ -129,7 +129,8 @@ Add the `TeslaControl` platform to your Homebridge `config.json`:
 | `vin` | string | ❌ | — | Specific vehicle VIN (if you have multiple Tesla vehicles) |
 | `pollInterval` | integer | ❌ | `300` | Status polling interval in seconds (min: 60) |
 | `proxyUrl` | string | ❌ | — | URL of tesla-http-proxy (e.g. `https://localhost:4443`) |
-| `battery_tile` | string | ❌ | `"false"` | Enable HomeKit battery percentage tile |
+| `battery_tile` | string | ❌ | `"false"` | Display battery level as a HomeKit tile (Thermostat). If `false`, battery level is exposed as a Humidity Sensor (%) |
+| `charge_current_control` | string | ❌ | `"thermostat"` | Charge current control type: `"thermostat"` (5–32A direct control) or `"lightbulb"` (0–100% slider mapped to 5–32A) |
 
 ---
 

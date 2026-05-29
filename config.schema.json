@@ -86,6 +86,11 @@
         "key": "battery_tile",
         "type": "string",
         "placeholder": "true"
+      },
+      {
+        "key": "charge_current_control",
+        "type": "string",
+        "placeholder": "thermostat"
       }
     }
   }
