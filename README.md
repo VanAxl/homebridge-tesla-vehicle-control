@@ -24,11 +24,11 @@ Control your Tesla directly from the Home app, Siri, or any HomeKit-compatible a
 | 🪟 **Windows** | Switch | Vent / Close all windows |
 | ❄️ **Defrost** | Switch | Max defrost ON/OFF |
 | 🔥 **Steering Wheel Heater** | Switch | Steering wheel heater ON/OFF |
-| 🔋 **Charge Limit** | Lightbulb | Charge limit 50–100% (brightness slider) |
-| 🔋 **Battery Level Tile** | HumiditySensor | Optional battery percentage tile (0–100%) |
+| 🔋 **Charge Limit** | Lightbulb | Charging limit control (50–100%) |
+| 🔋 **Battery Level** | Thermostat / HumiditySensor | Battery percentage display (configurable) |
 | 🔋 **Battery** | BatteryService | Battery level + low battery alert (<20%) |
+| ⚡ **Charge Current** | Thermostat / Lightbulb | Charging current control (5–32A, configurable) |
 | ⚡ **Max Range Charge** | Switch | Set charge to maximum range (momentary) |
-| ⚡ **Charge Current** | Lightbulb | Charging current 5–32A (brightness slider mapped to amps) |
 | 🔊 **Boombox** | Switch | Play external speaker sound (momentary) |
 
 ## Battery Tile
