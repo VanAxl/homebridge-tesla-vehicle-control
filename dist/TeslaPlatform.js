@@ -318,6 +318,11 @@ class TeslaPlatform {
           await this._ensureAwake();
           const amps = this._brightnessToAmps(value);
           await this.tesla.setChargeAmps(this.vehicleId, amps);
+          // Keep local cache in sync until next poll
+          if (this.vehicleData?.charge_state) {
+            this.vehicleData.charge_state.charge_current_request = amps;
+            this.vehicleData.charge_state.charge_amps = amps;
+          }
           chargeAmpsService.updateCharacteristic(C.Brightness, this._ampsToBrightness(amps));
           this.log("Charge amps set to " + amps + "A");
         } catch (e) {
@@ -387,6 +392,11 @@ class TeslaPlatform {
           await this._ensureAwake();
           const amps = Math.max(5, Math.min(32, Math.round(value)));
           await this.tesla.setChargeAmps(this.vehicleId, amps);
+          // Keep local cache in sync until next poll
+          if (this.vehicleData?.charge_state) {
+            this.vehicleData.charge_state.charge_current_request = amps;
+            this.vehicleData.charge_state.charge_amps = amps;
+          }
           chargeAmpsHeaterCooler.updateCharacteristic(C.CurrentTemperature, amps);
           chargeAmpsHeaterCooler.updateCharacteristic(C.HeatingThresholdTemperature, amps);
           this.log("Charge amps set to " + amps + "A");
