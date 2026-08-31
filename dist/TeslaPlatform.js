@@ -14,6 +14,10 @@ class TeslaPlatform {
     this.vehicleId = null;
     this.vehicleData = null;
     this.pollInterval = (config.pollInterval || 300) * 1000;
+    this.offlineRetryDelay = 5 * 60 * 1000;
+    this.offlineRetryTimer = null;
+    this.pollInProgress = false;
+    this.pollingStarted = false;
     this.retryCount = 0;
     this.maxRetries = 5;
     this.homeLatitude = parseFloat(config.home_lat || 0);
@@ -34,7 +38,7 @@ class TeslaPlatform {
     });
 
     api.on("didFinishLaunching", () => {
-      this.log("Tesla plugin v1.7.0 launched - Fleet API (partner registered)");
+      this.log("Tesla plugin v1.8.1 launched - Fleet API (partner registered)");
       this.discoverVehicle();
     });
   }
@@ -486,32 +490,76 @@ class TeslaPlatform {
   }
 
   async startPolling() {
-    const poll = async () => {
+    if (this.pollingStarted) {
+      this.log("Polling already started - ignoring duplicate start request");
+      return;
+    }
+    this.pollingStarted = true;
+
+    const isVehicleUnavailable = (result) => {
+      if (!result) return false;
+      const message = String(result.error || result.error_description || result.message || "").toLowerCase();
+      return result.httpStatus === 408 || message.includes("vehicle unavailable") || message.includes("offline") || message.includes("asleep");
+    };
+
+    const scheduleOfflineRetry = () => {
+      if (this.offlineRetryTimer) {
+        this.log("Vehicle data retry is already scheduled - not scheduling another");
+        return;
+      }
+      this.log("Vehicle is offline/asleep - keeping cached HomeKit data and scheduling one retry in 5 minutes (no wake-up)");
+      this.offlineRetryTimer = setTimeout(() => {
+        this.offlineRetryTimer = null;
+        poll(true);
+      }, this.offlineRetryDelay);
+    };
+
+    const poll = async (isOfflineRetry = false) => {
+      if (this.pollInProgress) {
+        this.log((isOfflineRetry ? "Offline retry" : "Scheduled poll") + " skipped because another vehicle data poll is in progress");
+        return;
+      }
+      if (!isOfflineRetry && this.offlineRetryTimer) {
+        this.log("Scheduled poll skipped because the offline retry is pending");
+        return;
+      }
+      this.pollInProgress = true;
       try {
-        this.log("Polling vehicle data...");
+        this.log(isOfflineRetry ? "Retrying vehicle data without waking the vehicle..." : "Polling vehicle data...");
         const r = await this.tesla.getVehicleData(this.vehicleId);
-        if (r && r.error && (r.error.includes("unavailable") || r.error.includes("offline") || r.error.includes("asleep"))) {
-          this.log("Vehicle is offline/asleep - will retry next poll cycle");
-          if (this.vehicleData) this.vehicleData.state = "offline";
+        if (isVehicleUnavailable(r)) {
+          if (isOfflineRetry) {
+            this.log("Vehicle data retry result: vehicle is still offline/asleep - keeping cached HomeKit data and returning to the normal polling cycle");
+          } else {
+            scheduleOfflineRetry();
+          }
         } else if (r && r.response) {
           this.vehicleData = r.response;
           this._lastPollTime = Date.now();
-          this.log("Got vehicle data - battery: " + (r.response.charge_state ? r.response.charge_state.battery_level + "%" : "n/a") + ", locked: " + (r.response.vehicle_state ? r.response.vehicle_state.locked : "n/a"));
+          this.log((isOfflineRetry ? "Vehicle data retry succeeded" : "Got vehicle data") + " - battery: " + (r.response.charge_state ? r.response.charge_state.battery_level + "%" : "n/a") + ", locked: " + (r.response.vehicle_state ? r.response.vehicle_state.locked : "n/a"));
           this.updateAccessories();
         } else if (r) {
           if (r.charge_state || r.vehicle_state || r.climate_state) {
             this.vehicleData = r;
             this._lastPollTime = Date.now();
-            this.log("Got vehicle data (unwrapped) - battery: " + (r.charge_state ? r.charge_state.battery_level + "%" : "n/a"));
+            this.log((isOfflineRetry ? "Vehicle data retry succeeded (unwrapped)" : "Got vehicle data (unwrapped)") + " - battery: " + (r.charge_state ? r.charge_state.battery_level + "%" : "n/a"));
             this.updateAccessories();
           } else {
-            this.log("Poll returned unexpected format: " + JSON.stringify(r).substring(0, 200));
+            this.log((isOfflineRetry ? "Vehicle data retry" : "Poll") + " returned unexpected format: " + JSON.stringify(r).substring(0, 200));
           }
         }
       } catch (e) {
-        if (e.message && !e.message.includes("408")) {
-          this.log("Poll error: " + e.message);
+        if (isVehicleUnavailable({ httpStatus: e.status || e.statusCode, error: e.message })) {
+          if (isOfflineRetry) {
+            this.log("Vehicle data retry result: vehicle is still offline/asleep - keeping cached HomeKit data and returning to the normal polling cycle");
+          } else {
+            scheduleOfflineRetry();
+          }
+        } else {
+          this.log((isOfflineRetry ? "Vehicle data retry error: " : "Poll error: ") + e.message);
         }
+      } finally {
+        this.pollInProgress = false;
       }
     };
     try { await poll(); } catch (e) { this.log("Initial poll failed: " + e.message); }

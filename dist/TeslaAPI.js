@@ -247,6 +247,9 @@ class TeslaApi {
   async getVehicleData(vehicleId) {
     const endpoints = "charge_state;climate_state;vehicle_state;drive_state;vehicle_config";
     const r = await this._request("GET", "/api/1/vehicles/" + vehicleId + "/vehicle_data?endpoints=" + encodeURIComponent(endpoints));
+    if (r.status >= 400) {
+      return Object.assign({}, r.data || {}, { httpStatus: r.status });
+    }
     return r.data;
   }
 
