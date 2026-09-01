@@ -38,7 +38,7 @@ class TeslaPlatform {
     });
 
     api.on("didFinishLaunching", () => {
-      this.log("Tesla plugin v1.8.1 launched - Fleet API (partner registered)");
+      this.log("Tesla plugin v1.8.2 launched - Fleet API (partner registered)");
       this.discoverVehicle();
     });
   }
@@ -101,8 +101,12 @@ class TeslaPlatform {
     lockService.getCharacteristic(C.LockTargetState).onSet(async (value) => {
       try {
         await this._ensureAwake();
-        if (value === C.LockTargetState.SECURED) { await this.tesla.lock(this.vehicleId); this.log("Locked"); }
-        else { await this.tesla.unlock(this.vehicleId); this.log("Unlocked"); }
+        const locked = value === C.LockTargetState.SECURED;
+        if (locked) { await this.tesla.lock(this.vehicleId); }
+        else { await this.tesla.unlock(this.vehicleId); }
+
+        this._updateLockState(lockService, locked);
+        this.log(locked ? "Locked - HomeKit state updated" : "Unlocked - HomeKit state updated");
       } catch (e) { this.log("Lock error: " + e.message); }
     });
 
@@ -478,6 +482,16 @@ class TeslaPlatform {
     infoService.setCharacteristic(C.Model, "Vehicle");
     infoService.setCharacteristic(C.SerialNumber, this.config.vin || "Unknown");
     infoService.setCharacteristic(C.FirmwareRevision, "1.4.2");
+  }
+
+  _updateLockState(lockService, locked) {
+    const C = this.Characteristic;
+    // Keep HomeKit and the local cache in sync after Tesla accepts the command.
+    if (this.vehicleData && this.vehicleData.vehicle_state) {
+      this.vehicleData.vehicle_state.locked = locked;
+    }
+    lockService.updateCharacteristic(C.LockCurrentState, locked ? C.LockCurrentState.SECURED : C.LockCurrentState.UNSECURED);
+    lockService.updateCharacteristic(C.LockTargetState, locked ? C.LockTargetState.SECURED : C.LockTargetState.UNSECURED);
   }
 
   async _ensureAwake() {
